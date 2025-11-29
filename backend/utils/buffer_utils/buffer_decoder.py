@@ -3,6 +3,43 @@ import struct
 
 from pathlib import Path
 
+### TODO: REFACTOR ###
+class Offset:
+    def __init__(self, offset, count, guessed_flag):
+        self.offset = offset
+        self.count = count
+        self.guessed_flag = guessed_flag
+import numpy as np
+
+def gen_offsets(sk_deltas_path: Path):
+    sk_deltas_format = [
+        ("VINDEX", np.uint32),
+        ("POSITION", np.float32, 3),
+        ("NORMAL", np.float32, 3),
+        ("TANGENT", np.float32, 3),
+    ]
+    sk_deltas = np.fromfile(sk_deltas_path, dtype=sk_deltas_format)
+
+    offsets: list[Offset] = []
+
+    offset: int = 0
+    print(sk_deltas.size)
+    for i in range(sk_deltas.size):
+        vindex = sk_deltas[i]["VINDEX"]
+        if i + 1 >= sk_deltas.size:
+            break
+        next_vindex = sk_deltas[i + 1]["VINDEX"]
+        if vindex >= next_vindex:
+            offsets.append(Offset(offset, i - offset + 1, True))
+            offset = i + 1
+    offsets.append(Offset(offset, sk_deltas.size - offset, True))
+
+    data_to_write = [o.__dict__ for o in offsets]
+    fieldnames = list(offsets[0].__dict__.keys())
+
+    return data_to_write
+### ###
+
 # Major thanks to DarkStarSword
 # https://github.com/DarkStarSword/3d-fixes/blob/cef49cbe6b324dc7a2041c1928f9b41678b3c61e/blender_3dmigoto.py#L113
 
@@ -91,6 +128,7 @@ def collect_binary_buffer_data(
     if shapekey_buffer_path and shapekey_cb_paths:
         buffer = reverse_applied_shapekeys(bytearray(buffer), shapekey_buffer_path.read_bytes(), shapekey_cb_paths, terminal)
 
+
     byte_offset    = 0
     decoder_offset = []
     for format in buffer_formats:
@@ -107,8 +145,12 @@ def collect_binary_buffer_data(
         ]
         for vertex_index in range(vertex_count)
     ]
-
+    sk_data = []
+    if shapekey_buffer_path:
+        sk_data = gen_offsets(shapekey_buffer_path)
+        return buffer_data, sk_data
     return buffer_data
+
 
 
 # Hardcoded specifically for hsr/zzz extraction and shapekey reversal

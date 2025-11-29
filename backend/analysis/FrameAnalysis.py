@@ -88,9 +88,9 @@ class FrameAnalysis():
         
         buffer_path    = buffer_paths[0].with_suffix('.buf')
         buffer_formats = [element.Format for element in buffer_elements]
-        buffer         = collect_binary_buffer_data(buffer_path, buffer_formats, buffer_stride, self.terminal, **shapekey_args)
+        buffer, sk_data = collect_binary_buffer_data(buffer_path, buffer_formats, buffer_stride, self.terminal, **shapekey_args)
 
-        return buffer, buffer_elements
+        return buffer, buffer_elements, sk_data
 
     def get_blend_data(self, buffer_paths: list[Path], expected_vertex_count: int):
         if len(buffer_paths) == 0: return None, None
@@ -159,13 +159,28 @@ class FrameAnalysis():
                 blend_paths    = [component.blend_path]    if component.blend_path    else []
                 texcoord_paths = [component.texcoord_path] if component.texcoord_path else component.backup_texcoord_paths
 
-                position_data, position_elements = self.get_position_data(position_paths, {
+                position_data, position_elements, sk_data = self.get_position_data(position_paths, {
                         'shapekey_buffer_path': component.shapekey_buffer_path,
                         'shapekey_cb_paths':    component.shapekey_cb_paths
                     } if component.shapekey_buffer_path and component.shapekey_cb_paths else {}
                 )
                 blend_data, blend_elements       = self.get_blend_data(blend_paths, len(position_data))
                 texcoord_data, texcoord_elements = self.get_texcoord_data(texcoord_paths)
+
+                if i == 0 and component.shapekey_buffer_path:
+                    sk_offsets_path_buf: Path = extract_path / (export_name + component.name + "SKDeltas.buf")
+                    shutil.copy(component.shapekey_buffer_path, sk_offsets_path_buf)
+                    # write sk_data csv
+                    if sk_data is not None:
+                        import csv
+                        sk_offsets_path_csv: Path = extract_path / (export_name + component.name + "SKOffsets.csv")
+
+                        with open(sk_offsets_path_csv, "w", encoding="UTF-8") as f:
+                            writer = csv.DictWriter(f, fieldnames=sk_data[0], lineterminator="\n")
+                            writer.writeheader()
+                            writer.writerows(sk_data)
+                else:
+                    self.terminal.print("NO SHAPEKEY PATH")
 
                 if not position_data:
                     json_builder.components[-1].__setattr__(f'position_vb', '')

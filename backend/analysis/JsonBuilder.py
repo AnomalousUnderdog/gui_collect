@@ -11,6 +11,7 @@ class JsonComponent():
     position_vb    : str = ''
     blend_vb       : str = ''
     texcoord_vb    : str = ''
+    sk_deltas_vb   : str = ''
     ib             : str = ''
     
     object_indexes        : list[int] = field(default_factory=lambda:[])
@@ -56,6 +57,10 @@ class JsonBuilder():
                 json_component.position_vb = component.position_hash
             elif component.backup_position_paths:
                 json_component.position_vb = component.draw_hash
+                
+            if component.shapekey_buffer_hash:
+                json_component.sk_deltas_vb = component.shapekey_buffer_hash
+
 
             json_component.texcoord_vb = component.texcoord_hash
             json_component.blend_vb    = component.blend_hash
