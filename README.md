@@ -3,16 +3,51 @@
 Used to extract model data from 3dmigoto generated frame dumps for certain anime games. Check out [3DMigoto Hunting & Dumping Tutorial](https://leotorrez.github.io/modding/guides/hunting) for a quick guide.
 
 ## Requirements
+### Windows
 - **Python >= 3.9**
 - texconv.exe (included in modules directory)
 - texdiag.exe (included in modules directory)
 
-> [!WARNING]
-> texconv.exe and texdiag.exe are used to convert and inspect .dds file types, and are included in the modules directory. If you're concerned about having unknown .exe bundled in which is a very valid concern, feel free to delete and grab them yourself from Microsoft DirectX's official repo here https://github.com/microsoft/DirectXTex/releases/tag/jun2024
+  > [!WARNING]
+  > texconv.exe and texdiag.exe are used to convert and inspect .dds file types, and are included in the modules directory. If you're concerned about having unknown .exe bundled in which is a very valid concern, feel free to delete and grab them yourself from Microsoft DirectX's official repo here https://github.com/microsoft/DirectXTex/releases/tag/jun2024
+
+### Linux
+- **Python >= 3.9**
+- [Pillow](https://pypi.org/project/pillow/) 10.2+
+
+  Debian/Ubuntu (Note: Pillow is packaged as `python3-pil` in Ubuntu):
+  ```
+  sudo apt-get install python3-pil
+  ```
+  or using pip:
+  ```
+  python3 -m pip install --upgrade pip
+  python3 -m pip install --upgrade Pillow
+  ```
+  See https://pillow.readthedocs.io/en/stable/installation/basic-installation.html
+
+- python3-tk
+
+  Debian/Ubuntu:
+  ```
+  sudo apt-get install python3-tk
+  ```
+
+  Fedora:
+  ```
+  sudo dnf install python3-tkinter
+  ```
 
 ## How to run
 
+### Windows
 Dowload zip and extract. Either double click `launch.bat` to automatically find the latest python version available and run the app using it or manually run `collect.py` with python.
+
+### Linux
+Dowload zip and extract. Run in terminal:
+```
+python3 collect.py
+```
 
 ## Thanks to the direct and indirect contributions of
 - [**SilentNightSound**](https://github.com/SilentNightSound/): None of this would've been possible without the [original collect script](https://github.com/SilentNightSound/GI-Model-Importer/blob/main/Tools/genshin_3dmigoto_collect.py) written by Silent (and GIMI obviously).
