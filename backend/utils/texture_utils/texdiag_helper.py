@@ -1,6 +1,9 @@
+import platform
 import re
 import subprocess
+
 from pathlib import Path
+from PIL import Image
 
 
 # Structure of each line is 'keyword = value'
@@ -23,38 +26,52 @@ def get_texdiag_info(filepath: str):
     * images
     * pixel size
     '''
-    completed_process = subprocess.run(
-        [
-            str(Path('modules', 'texdiag.exe')),
-            "info",
-            "-nologo",
-            filepath
-        ],
-        stdout = subprocess.PIPE,
-        stderr = subprocess.PIPE,
-    )
+    if platform.system() == "Windows":
+        completed_process = subprocess.run(
+            [
+                str(Path('modules', 'texdiag.exe')),
+                "info",
+                "-nologo",
+                filepath
+            ],
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE,
+        )
 
-    if completed_process.returncode != 0:
-        raise ZeroDivisionError()
+        if completed_process.returncode != 0:
+            raise ZeroDivisionError()
 
-    out = completed_process.stdout
-    try:
-        out = out.decode('utf-8').strip()
+        out = completed_process.stdout
+        try:
+            out = out.decode('utf-8').strip()
 
-    # I am not entirely sure why the decode fails, but I suspect its
-    # related to the usage of non-english characters in the user name
-    # or a non-english language being the language of the computer
-    # causing the shell to use odd characters
-    # UnicodeDecodeError: 'utf-8' codec can't decode byte 0xce in position 9: invalid continuation byte
-    except UnicodeDecodeError:
-        out = out.decode('latin-1').strip()
+        # I am not entirely sure why the decode fails, but I suspect its
+        # related to the usage of non-english characters in the user name
+        # or a non-english language being the language of the computer
+        # causing the shell to use odd characters
+        # UnicodeDecodeError: 'utf-8' codec can't decode byte 0xce in position 9: invalid continuation byte
+        except UnicodeDecodeError:
+            out = out.decode('latin-1').strip()
 
-    # Split each line, and discard the first.
-    out = [l.strip() for l in out.splitlines()][1:]
+        # Split each line, and discard the first.
+        out = [l.strip() for l in out.splitlines()][1:]
 
-    info = {}
-    for line in out:
-        m = LINE_PATTERN.match(line)
-        info[m.group(1)] = m.group(2)
+        info = {}
+        for line in out:
+            m = LINE_PATTERN.match(line)
+            info[m.group(1)] = m.group(2)
+    else:
+        info = {}
+
+        try:
+            im = Image.open(filepath)
+
+            info["width"] = im.width
+            info["height"] = im.height
+            info["format"] = im.format
+        except:
+            info["width"] = 1
+            info["height"] = 1
+            info["format"] = "???"
 
     return info

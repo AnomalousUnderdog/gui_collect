@@ -1,8 +1,10 @@
+import platform
 import subprocess
 import threading
 
 from tkinter import PhotoImage
 from pathlib import Path
+from PIL import Image
 
 from ...analysis.structs import Texture
 
@@ -37,14 +39,26 @@ class TextureManager():
             _width, _height = texture.async_read_width_height(blocking=True)
             width, height = get_max_fit(_width, _height, max_width)
 
-            proc = subprocess.Popen(
-                get_popen_args(texture.path, self.temp_dir_filepath, max_width, width, height),
-                stdout = subprocess.DEVNULL,
-                stderr = subprocess.DEVNULL,
-            )
-            proc.wait()
+            if platform.system() == "Windows":
+                proc = subprocess.Popen(
+                    get_popen_args(texture.path, self.temp_dir_filepath, max_width, width, height),
+                    stdout = subprocess.DEVNULL,
+                    stderr = subprocess.DEVNULL,
+                )
+                proc.wait()
+                save_success = proc.returncode == 0
+            else:
+                try:
+                    im = Image.open(str(texture.path.absolute()))
+                    if im.width != width or im.height != height:
+                        im = im.resize((width, height), Image.Resampling.NEAREST)
+                    im.save(temp_filepath)
+                    save_success = True
+                except OSError:
+                    save_success = False
+
             image = None
-            if proc.returncode == 0:
+            if save_success:
                 image = PhotoImage(file=str(temp_filepath.absolute()))
             else:
                 image = self.no_preview_image
@@ -52,7 +66,7 @@ class TextureManager():
 
             self.callbacks_lock.acquire(blocking=True)
 
-            if proc.returncode == 0:
+            if save_success:
                 self.cached_images[temp_filepath.name] = (_width, _height, image)
             else:
                 self.invalid_textures[temp_filepath.name] = (_width, _height)
