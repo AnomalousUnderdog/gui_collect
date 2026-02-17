@@ -9,6 +9,8 @@ import csv
 
 from pathlib import Path
 
+from utils.os_utils import open_file_browser, get_file_browser_name
+
 from backend.utils.buffer_utils.buffer_reader import get_buffer_elements
 from backend.utils.buffer_utils.buffer_encoder import merge_buffers, handle_no_weight_blend
 from backend.utils.buffer_utils.buffer_decoder import collect_binary_buffer_data 
@@ -23,7 +25,6 @@ from .structs     import Component
 
 from frontend.state import State
 
-FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
 
 class Offset:
     def __init__(self, offset, count):
@@ -280,8 +281,8 @@ class FrameAnalysis():
             self.terminal.print('Deleted frame analysis <PATH>{}</PATH>'.format(str(self.path.absolute())))
 
         if self.cfg.game[game].game_options.open_extract_folder:
-            subprocess.run([FILEBROWSER_PATH, extract_path])
-            self.terminal.print(f'Opening <PATH>{extract_path.absolute()}</PATH> with File Explorer')
+            open_file_browser(extract_path)
+            self.terminal.print(f'Opening <PATH>{extract_path.absolute()}</PATH> with {get_file_browser_name()}')
 
 
 def _export_component_buffers(export_name: str, path: Path, component: Component, vb_merged):

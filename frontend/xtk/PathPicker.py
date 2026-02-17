@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
@@ -7,8 +8,7 @@ from pathlib import Path
 from .FlatImageButton import FlatImageButton
 from frontend.style import brighter
 
-
-FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
+from utils.os_utils import open_file_browser
 
 
 class PathPicker(tk.Frame):
@@ -46,7 +46,7 @@ class PathPicker(tk.Frame):
         self.open_folder_btn.pack(side='left')
         
         def handle_click(event):
-            subprocess.run([FILEBROWSER_PATH, self.path])
+            open_file_browser(self.path)
         def handle_enter(event):
             self.path_label.config(bg=brighter(self.default_bg), fg='#e8eaed')
             self.open_folder_btn.config(bg=brighter(self.default_bg))
@@ -74,7 +74,15 @@ def get_short_path(path: Path, max_width: int = 50):
     if len(s) <= max_width:
         return s
 
-    while len(s) + 4 > max_width:
-        s = s.split('\\', maxsplit=1)[1]
+    if platform.system() == "Windows":
+        s = s.replace('/', '\\')
+        slash_char = '\\'
+    else:
+        s = s.replace('\\', '/')
+        slash_char = '/'
 
-    return '...\\' + s
+    while len(s) + 4 > max_width:
+        s = s.split(slash_char, maxsplit=1)[1]
+
+    return f"...{slash_char}{s}"
+

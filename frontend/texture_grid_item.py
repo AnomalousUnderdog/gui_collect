@@ -3,6 +3,8 @@ import subprocess
 import tkinter as tk
 from functools import partial
 
+from utils.os_utils import open_file_browser
+
 from backend.utils.texture_utils.TextureManager import TextureManager
 from backend.analysis.structs import Texture
 
@@ -10,9 +12,6 @@ from frontend.state import State
 
 from .xtk.ScrollableFrame import ScrollableFrame
 from .xtk.EntryWithPlaceholder import EntryWithPlaceholder
-
-
-FILEBROWSER_PATH = os.path.join(os.getenv('WINDIR'), 'explorer.exe')
 
 
 class TextureGridItem(tk.Canvas):
@@ -69,7 +68,7 @@ class TextureGridItem(tk.Canvas):
             self.clipboard_clear()
             self.clipboard_append(self.texture.hash)
         def handle_show():
-            subprocess.Popen(f'{FILEBROWSER_PATH} /select,"{self.texture.path}"')
+            open_file_browser(self.texture.path)
 
         m.add_command(label="Copy Texture Hash",     command=handle_copy) 
         m.add_command(label="Show in File Explorer", command=handle_show)

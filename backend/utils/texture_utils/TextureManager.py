@@ -22,7 +22,6 @@ class TextureManager():
             raise Exception('TextureManager already created.')
         TextureManager.__instance = self
         self.temp_dir_filepath = Path(temp_dir)
-        # subprocess.run([FILEBROWSER_PATH, Path(temp_dir)])
 
         self.no_preview_image = PhotoImage(file=str(Path('./resources/images/textures/NoPreview.256.png').absolute()))
 
@@ -57,7 +56,7 @@ class TextureManager():
                 self.cached_images[temp_filepath.name] = (_width, _height, image)
             else:
                 self.invalid_textures[temp_filepath.name] = (_width, _height)
-            
+
             callbacks = [*self.callbacks[temp_filepath.name]]
             del self.callbacks[temp_filepath.name]
 
