@@ -1,6 +1,7 @@
 import platform
 import subprocess
 import threading
+import numpy as np
 
 from tkinter import PhotoImage
 from pathlib import Path
@@ -48,13 +49,30 @@ class TextureManager():
                 proc.wait()
                 save_success = proc.returncode == 0
             else:
+                texture_path = str(texture.path.absolute())
                 try:
-                    im = Image.open(str(texture.path.absolute()))
+                    im = Image.open(texture_path)
+                except OSError as e:
+                    if str(e).startswith("Unsupported bitcount 16"):
+                        # this might be an image of type R16_UNORM
+                        # try to convert the 16-bit to 8-bit
+                        with open(texture_path, 'rb') as f:
+                            raw_data = f.read()
+                            data_uint16 = np.frombuffer(raw_data, dtype=np.uint16)
+                            data_normalized = data_uint16.astype(np.float32) / 65535.0
+                            data_uint8 = (data_normalized * 255.0).astype(np.uint8)
+                            im = Image.frombytes("L", (_width, _height), data_uint8)
+                    else:
+                        print(f"Texture Preview: PIL.Image.open failed: {str(e)}")
+                        save_success = False
+                        im = None
+
+                if im is not None:
                     if im.width != width or im.height != height:
                         im = im.resize((width, height), Image.Resampling.NEAREST)
                     im.save(temp_filepath)
                     save_success = True
-                except OSError:
+                else:
                     save_success = False
 
             image = None
