@@ -1,4 +1,5 @@
 import os
+import platform
 from pathlib import Path
 
 import tkinter as tk
@@ -92,10 +93,15 @@ def get_trunc_path(s: str, font: Font, max_width: int):
     if (font.measure(s) <= max_width):
         return s
 
+    if platform.system() == "Windows":
+        slash_char = '\\'
+    else:
+        slash_char = '/'
+
     # The font isnt changing so I can just hard code
     # the width of '...\' = font.measure('...\\') = 32px
     while 32 + font.measure(s) > max_width:
-        try: s = s.split('\\', maxsplit=1)[1]
+        try: s = s.split(slash_char, maxsplit=1)[1]
         except IndexError: break
 
-    return '...\\' + s
+    return f"...{slash_char}{s}"
