@@ -126,6 +126,9 @@ class TextureGridItem(tk.Canvas):
         self.border_frame.place(x=0, y=0, width=272, height=272, anchor='nw')
 
         def handle_leave(e):
+            if (e.state & 256) != 0:
+                # Button-1 was in state, don't proceed
+                return
             self._texture_picker.bind_keys()
             self.border_frame.destroy()
             
